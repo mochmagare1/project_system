@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>المشاريع</h2>
+<table>
+    <thead>
+        <tr>
+            <th>الفصل</th>
+            <th>المادة</th>
+            <th>النوع</th>
+            <th>اسم المشروع</th>
+            <th>الكلفة الكلية</th>
+            <th>الإجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for project in projects %}
+        <tr>
+            <td>{{ project[1] }}</td>
+            <td>{{ project[2] }}</td>
+            <td>{{ project[3] }}</td>
+            <td>{{ project[5] }}</td>
+            <td>{{ project[6] }}</td>
+            <td>{{ project[7] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

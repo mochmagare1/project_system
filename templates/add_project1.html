@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>إضافة مشروع جديد</h2>
+<form action="/add_project" method="POST">
+    <label>الفصل:</label><input type="text" name="الفصل" required><br>
+    <label>المادة:</label><input type="text" name="المادة" required><br>
+    <label>النوع:</label><input type="text" name="النوع" required><br>
+    <label>اسم المشروع:</label><input type="text" name="اسم_المشروع" required><br>
+    <label>الكلفة الكلية:</label><input type="number" name="الكلفة_الكلية" required><br>
+    <label>الإجراءات:</label><textarea name="الإجراءات" required></textarea><br>
+    <button type="submit">إضافة المشروع</button>
+</form>
+{% endblock %}

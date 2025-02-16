@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>إضافة مشروع</h2>
+<form action="/add_project" method="POST">
+    <div class="mb-3">
+        <label for="الفصل" class="form-label">الفصل</label>
+        <input type="text" class="form-control" id="الفصل" name="الفصل" required>
+    </div>
+    <div class="mb-3">
+        <label for="المادة" class="form-label">المادة</label>
+        <input type="text" class="form-control" id="المادة" name="المادة" required>
+    </div>
+    <div class="mb-3">
+        <label for="النوع" class="form-label">النوع</label>
+        <input type="text" class="form-control" id="النوع" name="النوع" required>
+    </div>
+    <div class="mb-3">
+        <label for="اسم_المشروع" class="form-label">اسم المشروع</label>
+        <input type="text" class="form-control" id="اسم_المشروع" name="اسم_المشروع" required>
+    </div>
+    <div class="mb-3">
+        <label for="الكلفة_الكلية" class="form-label">الكلفة الكلية</label>
+        <input type="number" step="0.01" class="form-control" id="الكلفة_الكلية" name="الكلفة_الكلية" required>
+    </div>
+    <div class="mb-3">
+        <label for="الإجراءات" class="form-label">الإجراءات</label>
+        <textarea class="form-control" id="الإجراءات" name="الإجراءات" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-success w-100">حفظ البيانات</button>
+</form>
+<a href="/home" class="btn btn-secondary w-100 mt-3">العودة إلى الصفحة الرئيسية</a>
+{% endblock %}
