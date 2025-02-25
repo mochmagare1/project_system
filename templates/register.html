@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+<h1>تسجيل مستخدم جديد</h1>
+<form method="post">
+    <label>اسم المستخدم:</label><br>
+    <input type="text" name="username" required><br><br>
 
-{% block title %}تسجيل حساب جديد{% endblock %}
+    <label>كلمة المرور:</label><br>
+    <input type="password" name="password" required><br><br>
 
-{% block content %}
-    <h2>تسجيل حساب جديد</h2>
-    <form action="{{ url_for('register') }}" method="POST">
-        <input type="text" name="username" placeholder="اسم المستخدم" required>
-        <input type="password" name="password" placeholder="كلمة المرور" required>
-        <button type="submit">تسجيل</button>
-    </form>
-{% endblock %}
+    <input type="submit" value="تسجيل">
+</form>
+
+<p>لديك حساب بالفعل؟ <a href="{{ url_for('login') }}">تسجيل الدخول</a></p>

@@ -1,112 +1,214 @@
-from flask import Flask, render_template, request, redirect, send_file, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
-import pandas as pd
-from io import BytesIO
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = 'secret123'  # مفتاح الجلسة لتأمين الكوكيز
 
 # إنشاء قاعدة البيانات والجداول
-
 def init_db():
     conn = sqlite3.connect('projects.db')
     c = conn.cursor()
+
+    # جدول المشاريع
     c.execute('''CREATE TABLE IF NOT EXISTS projects (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    الفصل TEXT,
-                    المادة TEXT,
-                    النوع TEXT,
                     التسلسل INTEGER,
-                    اسم_المشروع TEXT,
+                    المحافظة TEXT,
+                    المشروع TEXT,
+                    مدرج_في_وزارة_التخطيط TEXT,
+                    مؤشر_لدى_وزارة_المالية TEXT,
                     الكلفة_الكلية REAL,
-                    الإجراءات TEXT)''')
+                    الاستثناء_من_أساليب_التعاقد TEXT,
+                    استثناء TEXT,
+                    الإعلان DATE,
+                    دراسة_سيرة_ذاتية BOOLEAN,
+                    الدعوات BOOLEAN,
+                    الوثيقة_القياسية BOOLEAN,
+                    التخويل BOOLEAN,
+                    تاريخ_غلق_الدعوات DATE,
+                    لجان_الفتح BOOLEAN,
+                    لجنة_تحليل TEXT,
+                    قرار_لجنة_التحليل_الى_دائرة_العقود DATE,
+                    لجنة_المراجعة_والمصادقة TEXT,
+                    الإحالة TEXT,
+                    مسودة_العقد TEXT,
+                    توقيع_العقد DATE,
+                    ملاحظات TEXT
+                )''')
+
+    # جدول المستخدمين
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL
+                )''')
+
+    # إضافة مستخدم افتراضي إذا لم يكن موجودًا
+    c.execute("SELECT * FROM users WHERE username = 'admin'")
+    if not c.fetchone():
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)",
+                  ('admin', generate_password_hash('admin123')))
+
     conn.commit()
     conn.close()
 
-@app.route('/')
-def index():
-    return render_template('home.html')
-
-@app.route('/home', methods=['GET', 'POST'])
-def home():
+# صفحة تسجيل الدخول
+@app.route('/', methods=['GET', 'POST'])
+def login():
     if request.method == 'POST':
-        if 'projects' in request.form:
-            return redirect('/projects')
-        elif 'reports' in request.form:
-            return redirect('/reports')
-    return render_template('home.html')
-
-@app.route('/projects')
-def projects():
-    conn = sqlite3.connect('projects.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM projects')
-    projects = c.fetchall()
-    conn.close()
-    return render_template('projects.html', projects=projects)
-
-@app.route('/add_project', methods=['GET', 'POST'])
-def add_project():
-    if request.method == 'POST':
-        الفصل = request.form['الفصل']
-        المادة = request.form['المادة']
-        النوع = request.form['النوع']
-        اسم_المشروع = request.form['اسم_المشروع']
-        الكلفة_الكلية = request.form['الكلفة_الكلية']
-        الإجراءات = request.form['الإجراءات']
+        username = request.form['username']
+        password = request.form['password']
 
         conn = sqlite3.connect('projects.db')
         c = conn.cursor()
-        c.execute('''INSERT INTO projects (الفصل, المادة, النوع, اسم_المشروع, الكلفة_الكلية, الإجراءات) 
-                     VALUES (?, ?, ?, ?, ?, ?)''',
-                    (الفصل, المادة, النوع, اسم_المشروع, الكلفة_الكلية, الإجراءات))
-        conn.commit()
+        c.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = c.fetchone()
         conn.close()
 
-        return redirect('/projects')
-    return render_template('add_project.html')
+        if user and check_password_hash(user[2], password):
+            session['username'] = username
+            flash('تم تسجيل الدخول بنجاح!', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash('اسم المستخدم أو كلمة المرور غير صحيحة.', 'danger')
 
-@app.route('/export_excel')
-def export_excel():
+    return render_template('login.html')
+
+# تسجيل الخروج
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    flash('تم تسجيل الخروج.', 'info')
+    return redirect(url_for('login'))
+
+# تسجيل مستخدم جديد
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        conn = sqlite3.connect('projects.db')
+        c = conn.cursor()
+
+        try:
+            hashed_password = generate_password_hash(password)
+            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
+            conn.commit()
+            flash('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success')
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('اسم المستخدم موجود بالفعل. اختر اسمًا آخر.', 'warning')
+        finally:
+            conn.close()
+
+    return render_template('register.html')
+
+# الصفحة الرئيسية بعد تسجيل الدخول
+@app.route('/home', methods=['GET', 'POST'])
+def home():
+    if 'username' not in session:
+        flash('يجب تسجيل الدخول أولاً!', 'warning')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        if 'manage_projects' in request.form:
+            return redirect(url_for('add_project'))
+        elif 'contracts' in request.form:
+            return redirect(url_for('projects'))
+        elif 'reports' in request.form:
+            return redirect(url_for('reports'))
+
+    return render_template('home.html')
+
+# عرض المشاريع
+@app.route('/projects')
+def projects():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
     conn = sqlite3.connect('projects.db')
     c = conn.cursor()
     c.execute('SELECT * FROM projects')
     projects = c.fetchall()
     conn.close()
 
-    df = pd.DataFrame(projects, columns=['ID', 'الفصل', 'المادة', 'النوع', 'التسلسل', 'اسم المشروع', 'الكلفة الكلية', 'الإجراءات'])
+    return render_template('projects.html', projects=projects)
 
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='مشاريع')
-    output.seek(0)
+# إضافة مشروع جديد
+@app.route('/add_project', methods=['GET', 'POST'])
+def add_project():
+    if 'username' not in session:
+        return redirect(url_for('login'))
 
-    return send_file(output, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                     as_attachment=True, download_name="projects.xlsx")
+    if request.method == 'POST':
+        form_data = {key: request.form.get(key, '') for key in request.form}
+        checkboxes = ['دراسة سيرة ذاتية', 'الدعوات', 'الوثيقة القياسية', 'التخويل', 'لجان الفتح']
+        for box in checkboxes:
+            form_data[box] = 'صح' if request.form.get(box) else 'خطأ'
 
+        conn = sqlite3.connect('projects.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO projects (التسلسل, المحافظة, المشروع, مدرج_في_وزارة_التخطيط, مؤشر_لدى_وزارة_المالية,
+                     الكلفة_الكلية, الاستثناء_من_أساليب_التعاقد, استثناء, الإعلان, دراسة_سيرة_ذاتية, الدعوات, الوثيقة_القياسية,
+                     التخويل, تاريخ_غلق_الدعوات, لجان_الفتح, لجنة_تحليل, قرار_لجنة_التحليل_الى_دائرة_العقود,
+                     لجنة_المراجعة_والمصادقة, الإحالة, مسودة_العقد, توقيع_العقد, ملاحظات)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                  (
+                      form_data['التسلسل'], form_data['المحافظة'], form_data['المشروع'],
+                      form_data['مدرج_في_وزارة_التخطيط'], form_data['مؤشر_لدى_وزارة_المالية'],
+                      form_data['الكلفة الكلية (دينار عراقي)'], form_data['الاستثناء من أساليب التعاقد'],
+                      form_data['استثناء'], form_data['الإعلان'], form_data['دراسة سيرة ذاتية'],
+                      form_data['الدعوات'], form_data['الوثيقة القياسية'], form_data['التخويل'],
+                      form_data['تاريخ غلق الدعوات'], form_data['لجان الفتح'], form_data['لجنة تحليل'],
+                      form_data['قرار لجنة التحليل الى دائرة العقود'], form_data['لجنة المراجعة والمصادقة'],
+                      form_data['الإحالة'], form_data['مسودة العقد'], form_data['توقيع العقد'],
+                      form_data['ملاحظات']
+                  ))
+        conn.commit()
+        conn.close()
+
+        flash('تمت إضافة المشروع بنجاح!', 'success')
+        return redirect(url_for('projects'))
+
+    return render_template('add_project.html')
+
+# صفحة التقارير
 @app.route('/reports', methods=['GET', 'POST'])
 def reports():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
     reports = []
     if request.method == 'POST':
         project_name = request.form.get('project_name')
         conn = sqlite3.connect('projects.db')
         c = conn.cursor()
-        c.execute("SELECT * FROM projects WHERE اسم_المشروع LIKE ?", ('%' + project_name + '%',))
+        c.execute("SELECT * FROM projects WHERE المشروع LIKE ?", ('%' + project_name + '%',))
         reports = c.fetchall()
         conn.close()
+
     return render_template('reports.html', reports=reports)
 
+# البحث عن مشروع
 @app.route('/search_reports', methods=['POST'])
 def search_reports():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
     data = request.get_json()
     project_name = data.get('project_name')
 
     conn = sqlite3.connect('projects.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM projects WHERE اسم_المشروع LIKE ?", ('%' + project_name + '%',))
+    c.execute("SELECT * FROM projects WHERE المشروع LIKE ?", ('%' + project_name + '%',))
     reports = c.fetchall()
     conn.close()
+
     return jsonify(reports)
 
+# تشغيل التطبيق
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
