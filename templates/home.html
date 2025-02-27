@@ -1,6 +1,14 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<link rel="manifest" href="/manifest.json">
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(() => console.log('Service Worker Registered'));
+    }
+</script>
+
 <h2 class="text-center">الصفحة الرئيسية</h2>
 
 <form action="/home" method="POST">
