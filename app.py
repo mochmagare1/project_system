@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 import sqlite3
-import bcrypt
+bcrypt==4.2.1
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -44,7 +44,7 @@ def init_db():
 
     c.execute("SELECT * FROM users WHERE username = 'admin'")
     if not c.fetchone():
-        hashed_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', hashed_password))
 
     conn.commit()
@@ -62,12 +62,13 @@ def login():
         user = c.fetchone()
         conn.close()
 
-        if user and bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
-            session['username'] = username
-            flash('تم تسجيل الدخول بنجاح!', 'success')
-            return redirect(url_for('home'))
-        else:
-            flash('اسم المستخدم أو كلمة المرور غير صحيحة.', 'danger')
+        if user:
+            stored_password = user[2].encode('utf-8') if isinstance(user[2], str) else user[2]
+            if bcrypt.checkpw(password.encode('utf-8'), stored_password):
+                session['username'] = username
+                flash('تم تسجيل الدخول بنجاح!', 'success')
+                return redirect(url_for('home'))
+        flash('اسم المستخدم أو كلمة المرور غير صحيحة.', 'danger')
 
     return render_template('login.html')
 
@@ -87,7 +88,7 @@ def register():
         c = conn.cursor()
 
         try:
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
             conn.commit()
             flash('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success')
