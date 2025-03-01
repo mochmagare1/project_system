@@ -1,15 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
-bcrypt==4.2.1
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = 'secret123'
+app.secret_key = 'secret123'  # مفتاح الجلسة لتأمين الكوكيز
 
+# إنشاء قاعدة البيانات والجداول
 def init_db():
     conn = sqlite3.connect('projects.db')
     c = conn.cursor()
 
+    # جدول المشاريع
     c.execute('''CREATE TABLE IF NOT EXISTS projects (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     التسلسل INTEGER,
@@ -36,20 +37,23 @@ def init_db():
                     ملاحظات TEXT
                 )''')
 
+    # جدول المستخدمين
     c.execute('''CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     password TEXT NOT NULL
                 )''')
 
+    # إضافة مستخدم افتراضي إذا لم يكن موجودًا
     c.execute("SELECT * FROM users WHERE username = 'admin'")
     if not c.fetchone():
-        hashed_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ('admin', hashed_password))
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)",
+                  ('admin', generate_password_hash('admin123')))
 
     conn.commit()
     conn.close()
 
+# صفحة تسجيل الدخول
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -62,22 +66,23 @@ def login():
         user = c.fetchone()
         conn.close()
 
-        if user:
-            stored_password = user[2].encode('utf-8') if isinstance(user[2], str) else user[2]
-            if bcrypt.checkpw(password.encode('utf-8'), stored_password):
-                session['username'] = username
-                flash('تم تسجيل الدخول بنجاح!', 'success')
-                return redirect(url_for('home'))
-        flash('اسم المستخدم أو كلمة المرور غير صحيحة.', 'danger')
+        if user and check_password_hash(user[2], password):
+            session['username'] = username
+            flash('تم تسجيل الدخول بنجاح!', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash('اسم المستخدم أو كلمة المرور غير صحيحة.', 'danger')
 
     return render_template('login.html')
 
+# تسجيل الخروج
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     flash('تم تسجيل الخروج.', 'info')
     return redirect(url_for('login'))
 
+# تسجيل مستخدم جديد
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -88,7 +93,7 @@ def register():
         c = conn.cursor()
 
         try:
-            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            hashed_password = generate_password_hash(password)
             c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
             conn.commit()
             flash('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success')
@@ -100,6 +105,7 @@ def register():
 
     return render_template('register.html')
 
+# الصفحة الرئيسية بعد تسجيل الدخول
 @app.route('/home', methods=['GET', 'POST'])
 def home():
     if 'username' not in session:
@@ -116,6 +122,7 @@ def home():
 
     return render_template('home.html')
 
+# عرض المشاريع
 @app.route('/projects')
 def projects():
     if 'username' not in session:
@@ -129,6 +136,7 @@ def projects():
 
     return render_template('projects.html', projects=projects)
 
+# إضافة مشروع جديد
 @app.route('/add_project', methods=['GET', 'POST'])
 def add_project():
     if 'username' not in session:
@@ -166,6 +174,7 @@ def add_project():
 
     return render_template('add_project.html')
 
+# صفحة التقارير
 @app.route('/reports', methods=['GET', 'POST'])
 def reports():
     if 'username' not in session:
@@ -182,6 +191,7 @@ def reports():
 
     return render_template('reports.html', reports=reports)
 
+# البحث عن مشروع
 @app.route('/search_reports', methods=['POST'])
 def search_reports():
     if 'username' not in session:
@@ -198,6 +208,12 @@ def search_reports():
 
     return jsonify(reports)
 
+# تشغيل التطبيق
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True)
+from flask import send_from_directory
+
 @app.route('/manifest.json')
 def manifest():
     return send_from_directory('static', 'manifest.json')
@@ -205,7 +221,3 @@ def manifest():
 @app.route('/service-worker.js')
 def sw():
     return send_from_directory('static', 'service-worker.js')
-
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True)
