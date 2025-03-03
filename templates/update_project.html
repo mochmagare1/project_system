@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2 class="text-center my-4 text-warning">تعديل بيانات المشروع</h2>
+
+<div class="container">
+    <form action="{{ url_for('update_project', project_name=project[3]) }}" method="POST" class="row g-3 p-4 bg-light shadow rounded">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">التسلسل:</label>
+            <input type="number" name="التسلسل" value="{{ project[1] }}" class="form-control border-primary" required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label fw-bold">المحافظة:</label>
+            <input type="text" name="المحافظة" value="{{ project[2] }}" class="form-control border-primary" required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label fw-bold">المشروع:</label>
+            <input type="text" name="المشروع" value="{{ project[3] }}" class="form-control border-primary" required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label fw-bold">الكلفة الكلية:</label>
+            <input type="number" name="الكلفة_الكلية" value="{{ project[6] }}" class="form-control border-primary" required>
+        </div>
+
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-warning btn-lg">حفظ التعديلات</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

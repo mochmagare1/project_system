@@ -1,25 +1,24 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<link rel="manifest" href="/manifest.json">
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(() => console.log('Service Worker Registered'));
-    }
-</script>
+<h2 class="text-center my-4 text-primary">الصفحة الرئيسية</h2>
 
-<h2 class="text-center">الصفحة الرئيسية</h2>
+<div class="container">
+    <form action="{{ url_for('home') }}" method="POST" class="row g-3 p-4 bg-light shadow rounded">
+        <div class="col-md-6">
+            <button type="submit" name="manage_projects" class="btn btn-success w-100">إدارة المشاريع</button>
+        </div>
+        <div class="col-md-6">
+            <button type="submit" name="edit_projects" class="btn btn-warning w-100">تعديل أو حذف البيانات</button>
+        </div>
+        <div class="col-md-6">
+            <button type="submit" name="delete_project" class="btn btn-danger w-100">حذف مشروع</button>
+        </div>
+    </form>
 
-<form action="/home" method="POST">
-    <div class="mb-3">
-        <button type="submit" name="manage_projects" class="btn btn-success w-100">إدارة المشاريع</button>
+    <!-- زر التقارير يعمل الآن كرابط مباشر -->
+    <div class="col-md-6 mt-3">
+        <a href="{{ url_for('reports') }}" class="btn btn-info w-100">التقارير</a>
     </div>
-    <div class="mb-3">
-        <button type="submit" name="contracts" class="btn btn-info w-100">العقود</button>
-    </div>
-    <div class="mb-3">
-        <button type="submit" name="reports" class="btn btn-primary w-100">التقارير</button>
-    </div>
-</form>
+</div>
 {% endblock %}
