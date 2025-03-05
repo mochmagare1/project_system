@@ -1,37 +1,89 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<h2 class="text-center my-4 text-warning">تعديل أو حذف بيانات المشروع</h2>
+<h2 class="text-center my-4 text-warning">تعديل بيانات المشروع</h2>
 
-<div class="container">
-    {% if projects %}
-    <table class="table table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>التسلسل</th>
-                <th>المحافظة</th>
-                <th>المشروع</th>
-                <th>الكلفة الكلية</th>
-                <th>الإجراءات</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for project in projects %}
-            <tr>
-                <td>{{ project[1] }}</td>
-                <td>{{ project[2] }}</td>
-                <td>{{ project[3] }}</td>
-                <td>{{ project[6] }}</td>
-                <td>
-                    <a href="{{ url_for('update_project', project_name=project[3]) }}" class="btn btn-primary btn-sm">تعديل</a>
-                    <a href="{{ url_for('delete_project', project_name=project[3]) }}" class="btn btn-danger btn-sm">حذف</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p class="text-center text-danger">لا توجد مشاريع مسجلة.</p>
-    {% endif %}
+<!-- نموذج البحث عن المشروع -->
+<div class="search-container text-center">
+    <h3>ابحث عن المشروع</h3>
+    <input type="text" id="text-search" class="form-control w-50 d-inline" placeholder="ادخل اسم المشروع">
+    <button class="btn btn-primary" onclick="searchByText()">بحث</button>
 </div>
+
+<!-- نموذج تعديل المشروع -->
+<div class="container mt-4">
+    <form id="edit-form" action="/update_project" method="POST" class="row g-3 p-4 bg-light shadow rounded" style="display: none;">
+        <input type="hidden" name="المشروع" id="edit-المشروع">
+
+        {% set fields = [
+            ('التسلسل', 'number'),
+            ('المحافظة', 'text'),
+            ('مدرج_في_وزارة_التخطيط', 'text'),
+            ('مؤشر_لدى_وزارة_المالية', 'text'),
+            ('الكلفة_الكلية', 'number'),
+            ('الإعلان', 'date'),
+            ('تاريخ_غلق_الدعوات', 'date'),
+            ('لجنة_تحليل', 'text'),
+            ('قرار_لجنة_التحليل_الى_دائرة_العقود', 'date'),
+            ('لجنة_المراجعة_والمصادقة', 'text'),
+            ('الإحالة', 'text'),
+            ('مسودة_العقد', 'text'),
+            ('توقيع_العقد', 'date'),
+            ('ملاحظات', 'text')
+        ] %}
+
+        {% for label, type in fields %}
+        <div class="col-md-6">
+            <label class="form-label fw-bold">{{ label.replace('_', ' ') }}:</label>
+            <input type="{{ type }}" name="{{ label }}" id="edit-{{ label }}" class="form-control border-primary">
+        </div>
+        {% endfor %}
+
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-success btn-lg">حفظ التعديلات</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function searchByText() {
+        let projectName = document.getElementById('text-search').value.trim();
+        fetch('/search_project', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_name: projectName })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (Object.keys(data).length > 0) {
+                populateForm(data);
+            } else {
+                alert("لم يتم العثور على المشروع!");
+                document.getElementById('edit-form').style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function populateForm(project) {
+        document.getElementById('edit-المشروع').value = project['المشروع'];
+
+        let fields = [
+            'التسلسل', 'المحافظة', 'مدرج_في_وزارة_التخطيط', 'مؤشر_لدى_وزارة_المالية',
+            'الكلفة_الكلية', 'الإعلان', 'تاريخ_غلق_الدعوات', 'لجنة_تحليل',
+            'قرار_لجنة_التحليل_الى_دائرة_العقود', 'لجنة_المراجعة_والمصادقة',
+            'الإحالة', 'مسودة_العقد', 'توقيع_العقد', 'ملاحظات'
+        ];
+
+        fields.forEach(field => {
+            document.getElementById(`edit-${field}`).value = project[field] || '';
+        });
+
+        document.getElementById('edit-form').style.display = 'block';
+    }
+
+    document.getElementById('edit-form').addEventListener('submit', function(event) {
+        // لا توجد تحذيرات هنا، سيتم حفظ جميع التعديلات مباشرة
+    });
+</script>
 {% endblock %}

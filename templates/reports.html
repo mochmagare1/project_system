@@ -1,35 +1,124 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<head>
+    <title>التقارير</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th, .table td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .table-dark {
+            background-color: #343a40;
+            color: white;
+        }
+
+        .error {
+            border: 2px solid red; /* لون الحدود باللون الأحمر للحقول الفارغة */
+        }
+    </style>
+</head>
+
 <h2 class="text-center my-4 text-primary">التقارير</h2>
 
-<!-- عرض البيانات في جدول -->
-<div class="container">
-    {% if reports %}
-    <table class="table table-bordered">
+<!-- نموذج البحث بالصوت والكتابة -->
+<div class="search-container text-center">
+    <h3>ابحث عن المشروع</h3>
+    <input type="text" id="text-search" class="form-control w-50 d-inline" placeholder="ادخل اسم المشروع">
+    <button class="btn btn-primary" onclick="searchByText()">بحث</button>
+    <button class="btn btn-secondary" onclick="startVoiceRecognition()">🔊 بحث بالصوت</button>
+</div>
+
+<!-- جدول عرض التقارير -->
+<div class="table-responsive mt-4">
+    <table class="table table-bordered text-center">
         <thead class="table-dark">
             <tr>
-                <th>التسلسل</th>
-                <th>المحافظة</th>
-                <th>المشروع</th>
-                <th>الكلفة الكلية</th>
-                <th>الإعلان</th>
+                {% if reports %}
+                    {% for key in reports[0].keys() %}
+                        <th>{{ key.replace('_', ' ') }}</th>
+                    {% endfor %}
+                {% endif %}
             </tr>
         </thead>
-        <tbody>
+        <tbody id="report-table-body">
             {% for report in reports %}
-            <tr>
-                <td>{{ report[1] }}</td>
-                <td>{{ report[2] }}</td>
-                <td>{{ report[3] }}</td>
-                <td>{{ report[6] }}</td>
-                <td>{{ report[9] }}</td>
+            <tr id="row-{{ report['المشروع']|replace(' ', '_') }}">
+                {% for key, value in report.items() %}
+                <td>{{ value if value is not none else '-' }}</td>
+                {% endfor %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    {% else %}
-    <p class="text-center text-danger">لا توجد بيانات لعرضها.</p>
-    {% endif %}
 </div>
+
+<script>
+    function searchByText() {
+        let projectName = document.getElementById('text-search').value.trim().replace(/\s+/g, '_');
+        fetch('/search_reports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_name: projectName })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateReportTable(data, projectName);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى.");
+        });
+    }
+
+    function startVoiceRecognition() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'ar-SA'; // تعيين اللغة للعربية
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.start();
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('text-search').value = transcript; // إدخال النص في حقل البحث
+            searchByText(); // بدء البحث
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Error occurred in recognition: ' + event.error);
+            alert("حدث خطأ أثناء التعرف على الصوت. يرجى المحاولة مرة أخرى.");
+        };
+    }
+
+    function updateReportTable(data, projectName) {
+        let tableBody = document.getElementById('report-table-body');
+        tableBody.innerHTML = '';
+
+        if (data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="15" class="text-center text-danger">لا توجد نتائج.</td></tr>';
+        } else {
+            data.forEach(report => {
+                let row = `<tr id="row-${report['المشروع'].replace(/\s+/g, '_')}">`;
+                Object.values(report).forEach(value => {
+                    row += `<td>${value !== null ? value : '-'}</td>`;
+                });
+                row += `</tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+    }
+</script>
 {% endblock %}

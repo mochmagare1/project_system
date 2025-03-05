@@ -3,7 +3,7 @@ body {
     font-family: 'Arial', sans-serif;
     background-color: #f4f4f9;
     color: #333;
-    direction: rtl;  /* إضافة هذه السطر لتغيير الاتجاه */
+    direction: rtl; /* تغيير الاتجاه إلى اليمين */
 }
 
 h2 {
@@ -12,7 +12,7 @@ h2 {
     margin-bottom: 30px;
 }
 
-/* تخصيص تصميم الأزرار */
+/* تخصيص الأزرار */
 button {
     background-color: #4CAF50;
     color: white;
@@ -21,11 +21,12 @@ button {
     font-size: 16px;
     cursor: pointer;
     border-radius: 5px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease-in-out;
 }
 
 button:hover {
     background-color: #45a049;
+    transform: scale(1.05);
 }
 
 /* تخصيص الحقول في النماذج */
@@ -42,9 +43,10 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
     border-color: #4CAF50;
     outline: none;
+    box-shadow: 0px 0px 5px rgba(76, 175, 80, 0.5);
 }
 
-/* تخصيص الجدول */
+/* تخصيص الجداول */
 table {
     width: 100%;
     margin-top: 30px;
@@ -70,21 +72,99 @@ table tr:hover {
     background-color: #ddd;
 }
 
-/* تخصيص النماذج */
-form {
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* تخصيص صفحة تسجيل الدخول */
-h2.text-center {
-    font-size: 24px;
+/* تحسين البحث */
+.search-container {
     margin-bottom: 20px;
+    text-align: center;
 }
 
-form .form-label {
-    font-size: 18px;
-    margin-bottom: 10px;
+.search-container input {
+    border: 2px solid #007bff;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: all 0.3s ease-in-out;
+}
+
+.search-container input:focus {
+    border-color: #4CAF50;
+    box-shadow: 0px 0px 5px rgba(76, 175, 80, 0.5);
+}
+
+.search-container button {
+    margin-left: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+}
+
+/* تحسين مظهر الأزرار */
+button, a.btn {
+    transition: all 0.3s ease-in-out;
+}
+
+button:hover, a.btn:hover {
+    transform: scale(1.05);
+}
+
+/* تخصيص البحث الصوتي */
+.voice-search {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.voice-search:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* تحسين التجاوب مع الهواتف */
+@media (max-width: 768px) {
+    .search-container input {
+        width: 80%;
+    }
+
+    .table th, .table td {
+        font-size: 14px;
+        padding: 5px;
+    }
+}
+
+/* تمييز الصف المحدد عند البحث باللون الأحمر بدون وميض */
+.highlight {
+    background-color: red !important;
+    font-weight: bold;
+    transition: background-color 0.3s ease-in-out;
+    border: 3px solid black; /* تكبير التحديد */
+}
+/* تمييز الصف المحدد عند البحث */
+.highlight {
+    background-color: red !important;
+    font-weight: bold;
+    transition: background-color 0.3s ease-in-out;
+    border: 3px solid black;
+}
+
+/* تحسين التجاوب مع الهواتف */
+@media (max-width: 768px) {
+    .search-container input {
+        width: 80%;
+    }
+
+    .table th, .table td {
+        font-size: 14px;
+        padding: 5px;
+    }
+}
+/* تمييز الصف المحدد عند البحث */
+.highlight {
+    background-color: red !important;
+    font-weight: bold;
+    transition: background-color 0.5s ease-in-out, transform 0.3s ease-in-out;
+    border: 3px solid black !important;
 }

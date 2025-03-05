@@ -1,10 +1,34 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = 'secret123'  # مفتاح الجلسة لتأمين الكوكيز
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
 
+        if not username or not password:
+            flash('يرجى إدخال اسم مستخدم وكلمة مرور.', 'danger')
+            return redirect(url_for('register'))
+
+        conn = sqlite3.connect('projects.db')
+        c = conn.cursor()
+
+        try:
+            hashed_password = generate_password_hash(password)
+            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
+            conn.commit()
+            flash('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success')
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('اسم المستخدم موجود بالفعل. اختر اسمًا آخر.', 'warning')
+        finally:
+            conn.close()
+
+    return render_template('register.html')
 # إنشاء قاعدة البيانات والجداول
 def init_db():
     conn = sqlite3.connect('projects.db')
@@ -82,29 +106,6 @@ def logout():
     flash('تم تسجيل الخروج.', 'info')
     return redirect(url_for('login'))
 
-# تسجيل مستخدم جديد
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        conn = sqlite3.connect('projects.db')
-        c = conn.cursor()
-
-        try:
-            hashed_password = generate_password_hash(password)
-            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
-            conn.commit()
-            flash('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.', 'success')
-            return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
-            flash('اسم المستخدم موجود بالفعل. اختر اسمًا آخر.', 'warning')
-        finally:
-            conn.close()
-
-    return render_template('register.html')
-
 # الصفحة الرئيسية
 @app.route('/home', methods=['GET', 'POST'])
 def home():
@@ -112,49 +113,192 @@ def home():
         flash('يجب تسجيل الدخول أولاً!', 'warning')
         return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        if 'manage_projects' in request.form:
-            return redirect(url_for('add_project'))
-        elif 'delete_project' in request.form:
-            return redirect(url_for('delete_project'))
-
     return render_template('home.html')
-
-# إضافة مشروع جديد
-@app.route('/add_project', methods=['GET', 'POST'])
-def add_project():
+# البحث عن مشروع معين
+@app.route('/search_project', methods=['POST'])
+def search_project():
     if 'username' not in session:
+        return jsonify([])
+
+    try:
+        data = request.get_json()
+        project_name = data.get('project_name', '').strip()
+
+        conn = sqlite3.connect('projects.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT * FROM projects WHERE المشروع LIKE ?", ('%' + project_name + '%',))
+        project = c.fetchone()
+        conn.close()
+
+        return jsonify(dict(project)) if project else jsonify([])
+    except Exception as e:
+        flash(f'حدث خطأ أثناء البحث: {str(e)}', 'danger')
+        return jsonify([])
+@app.route ( '/add_project', methods = ['GET', 'POST'] )
+def add_project() :
+    if 'username' not in session :
+        flash ( 'يجب تسجيل الدخول أولاً!', 'warning' )
+        return redirect ( url_for ( 'login' ) )
+
+    if request.method == 'POST' :
+        try :
+            البيانات = {
+                'التسلسل' : request.form.get ( 'التسلسل', '' ).strip ( ),
+                'المحافظة' : request.form.get ( 'المحافظة', '' ).strip ( ),
+                'المشروع' : request.form.get ( 'المشروع', '' ).strip ( ),
+                'مدرج_في_وزارة_التخطيط' : request.form.get ( 'مدرج_في_وزارة_التخطيط', '' ).strip ( ),
+                'مؤشر_لدى_وزارة_المالية' : request.form.get ( 'مؤشر_لدى_وزارة_المالية', '' ).strip ( ),
+                'الكلفة_الكلية' : request.form.get ( 'الكلفة_الكلية', '' ).strip ( ),
+                'الاستثناء_من_أساليب_التعاقد' : request.form.get ( 'الاستثناء_من_أساليب_التعاقد', '' ).strip ( ),
+                'استثناء' : request.form.get ( 'استثناء', '' ).strip ( ),
+                'الإعلان' : request.form.get ( 'الإعلان', '' ).strip ( ),
+                'تاريخ_غلق_الدعوات' : request.form.get ( 'تاريخ_غلق_الدعوات', '' ).strip ( ),
+                'لجنة_تحليل' : request.form.get ( 'لجنة_تحليل', '' ).strip ( ),
+                'قرار_لجنة_التحليل_الى_دائرة_العقود' : request.form.get ( 'قرار_لجنة_التحليل_الى_دائرة_العقود',
+                                                                          '' ).strip ( ),
+                'لجنة_المراجعة_والمصادقة' : request.form.get ( 'لجنة_المراجعة_والمصادقة', '' ).strip ( ),
+                'الإحالة' : request.form.get ( 'الإحالة', '' ).strip ( ),
+                'مسودة_العقد' : request.form.get ( 'مسودة_العقد', '' ).strip ( ),
+                'توقيع_العقد' : request.form.get ( 'توقيع_العقد', '' ).strip ( ),
+                'ملاحظات' : request.form.get ( 'ملاحظات', '' ).strip ( ),
+                'دراسة_سيرة_ذاتية' : 'صح' if request.form.get ( 'دراسة_سيرة_ذاتية' ) else '',
+                'الدعوات' : 'صح' if request.form.get ( 'الدعوات' ) else '',
+                'الوثيقة_القياسية' : 'صح' if request.form.get ( 'الوثيقة_القياسية' ) else '',
+                'التخويل' : 'صح' if request.form.get ( 'التخويل' ) else '',
+                'لجان_الفتح' : 'صح' if request.form.get ( 'لجان_الفتح' ) else ''
+            }
+
+            conn = sqlite3.connect ( 'projects.db' )
+            c = conn.cursor ( )
+            c.execute ( '''INSERT INTO projects (
+                            التسلسل, المحافظة, المشروع, مدرج_في_وزارة_التخطيط, مؤشر_لدى_وزارة_المالية, 
+                            الكلفة_الكلية, الاستثناء_من_أساليب_التعاقد, استثناء, الإعلان, 
+                            تاريخ_غلق_الدعوات, لجنة_تحليل, قرار_لجنة_التحليل_الى_دائرة_العقود, 
+                            لجنة_المراجعة_والمصادقة, الإحالة, مسودة_العقد, توقيع_العقد, ملاحظات, 
+                            دراسة_سيرة_ذاتية, الدعوات, الوثيقة_القياسية, التخويل, لجان_الفتح
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                        tuple ( البيانات.values ( ) ) )
+
+            conn.commit ( )
+            conn.close ( )
+
+            flash ( 'تمت إضافة المشروع بنجاح!', 'success' )
+            return redirect ( url_for ( 'add_project' ) )
+
+        except Exception as e :
+            flash ( f'حدث خطأ أثناء إضافة المشروع: {str ( e )}', 'danger' )
+
+    return render_template ( 'add_project.html' )
+@app.route('/edit_project', methods=['GET'])
+def edit_project():
+    if 'username' not in session:
+        flash('يجب تسجيل الدخول أولاً!', 'warning')
         return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        form_data = {
+    conn = sqlite3.connect('projects.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT * FROM projects")
+    projects = [dict(row) for row in c.fetchall()]
+    conn.close()
+
+    return render_template('edit_project.html', projects=projects)
+
+@app.route('/update_project', methods=['POST'])
+def update_project():
+    if 'username' not in session:
+        flash('يجب تسجيل الدخول أولاً!', 'warning')
+        return redirect(url_for('login'))
+
+    project_name = request.form.get('المشروع', '').strip()
+    if not project_name:
+        flash('يجب تحديد المشروع لتعديله!', 'danger')
+        return redirect(url_for('edit_project'))
+
+    try:
+        البيانات = {
             'التسلسل': request.form.get('التسلسل', ''),
             'المحافظة': request.form.get('المحافظة', ''),
-            'المشروع': request.form.get('المشروع', ''),
             'مدرج_في_وزارة_التخطيط': request.form.get('مدرج_في_وزارة_التخطيط', ''),
             'مؤشر_لدى_وزارة_المالية': request.form.get('مؤشر_لدى_وزارة_المالية', ''),
-            'الكلفة_الكلية': request.form.get('الكلفة_الكلية', '0'),
+            'الكلفة_الكلية': request.form.get('الكلفة_الكلية', ''),
+            'الإعلان': request.form.get('الإعلان', ''),
+            'تاريخ_غلق_الدعوات': request.form.get('تاريخ_غلق_الدعوات', ''),
+            'لجنة_تحليل': request.form.get('لجنة_تحليل', ''),
+            'قرار_لجنة_التحليل_الى_دائرة_العقود': request.form.get('قرار_لجنة_التحليل_الى_دائرة_العقود', ''),
+            'لجنة_المراجعة_والمصادقة': request.form.get('لجنة_المراجعة_والمصادقة', ''),
+            'الإحالة': request.form.get('الإحالة', ''),
+            'مسودة_العقد': request.form.get('مسودة_العقد', ''),
+            'توقيع_العقد': request.form.get('توقيع_العقد', ''),
+            'ملاحظات': request.form.get('ملاحظات', ''),
+            'دراسة_سيرة_ذاتية': 'صح' if request.form.get('دراسة_سيرة_ذاتية') else '',
+            'الدعوات': 'صح' if request.form.get('الدعوات') else '',
+            'الوثيقة_القياسية': 'صح' if request.form.get('الوثيقة_القياسية') else '',
+            'التخويل': 'صح' if request.form.get('التخويل') else '',
+            'لجان_الفتح': 'صح' if request.form.get('لجان_الفتح') else ''
         }
 
         conn = sqlite3.connect('projects.db')
         c = conn.cursor()
-        try:
-            c.execute('''INSERT INTO projects (التسلسل, المحافظة, المشروع, مدرج_في_وزارة_التخطيط, مؤشر_لدى_وزارة_المالية,
-                         الكلفة_الكلية) VALUES (?, ?, ?, ?, ?, ?)''',
-                      (form_data['التسلسل'], form_data['المحافظة'], form_data['المشروع'],
-                       form_data['مدرج_في_وزارة_التخطيط'], form_data['مؤشر_لدى_وزارة_المالية'], form_data['الكلفة_الكلية']))
-            conn.commit()
-            flash('تمت إضافة المشروع بنجاح!', 'success')
-        except Exception as e:
-            flash(f'خطأ أثناء الحفظ: {str(e)}', 'danger')
-        finally:
-            conn.close()
+        c.execute('''
+            UPDATE projects SET التسلسل=?, المحافظة=?, مدرج_في_وزارة_التخطيط=?, 
+                             مؤشر_لدى_وزارة_المالية=?, الكلفة_الكلية=?, الإعلان=?, 
+                             تاريخ_غلق_الدعوات=?, لجنة_تحليل=?, 
+                             قرار_لجنة_التحليل_الى_دائرة_العقود=?, لجنة_المراجعة_والمصادقة=?, 
+                             الإحالة=?, مسودة_العقد=?, توقيع_العقد=?, ملاحظات=?, 
+                             دراسة_سيرة_ذاتية=?, الدعوات=?, الوثيقة_القياسية=?, 
+                             التخويل=?, لجان_الفتح=? 
+            WHERE المشروع=?''',
+            (*بيانات.values(), project_name))
 
-        return redirect(url_for('home'))
+        conn.commit()
+        conn.close()
 
-    return render_template('add_project.html')
+        flash(f'تم تعديل بيانات المشروع "{project_name}" بنجاح!', 'success')
+    except Exception as e:
+        flash(f'حدث خطأ أثناء التعديل: {str(e)}', 'danger')
 
-# حذف مشروع معين بعد عرض التفاصيل
+    return redirect(url_for('edit_project'))
+
+@app.route('/search_reports', methods=['POST'])
+def search_reports():
+    if 'username' not in session:
+        return jsonify([])
+
+    try:
+        data = request.get_json()
+        project_name = data.get('project_name', '').replace('_', ' ').strip()
+
+        conn = sqlite3.connect('projects.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT * FROM projects WHERE المشروع LIKE ?", ('%' + project_name + '%',))
+        reports = [dict(row) for row in c.fetchall()]
+        conn.close()
+
+        return jsonify(reports)
+    except Exception as e:
+        return jsonify([])
+
+@app.route('/reports', methods=['GET'])
+def reports():
+    if 'username' not in session:
+        flash('يجب تسجيل الدخول أولاً!', 'warning')
+        return redirect(url_for('login'))
+
+    try:
+        conn = sqlite3.connect('projects.db')
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT * FROM projects")
+        reports = [dict(row) for row in c.fetchall()]
+        conn.close()
+    except Exception as e:
+        flash(f'حدث خطأ أثناء جلب التقارير: {str(e)}', 'danger')
+        reports = []
+
+    return render_template('reports.html', reports=reports)
 @app.route('/delete_project', methods=['GET', 'POST'])
 def delete_project():
     if 'username' not in session:
@@ -167,84 +311,31 @@ def delete_project():
         project_name = request.form.get('project_name', '').strip()
 
         if 'search' in request.form:
-            conn = sqlite3.connect('projects.db')
-            c = conn.cursor()
-            c.execute("SELECT * FROM projects WHERE المشروع = ?", (project_name,))
-            project = c.fetchone()
-            conn.close()
+            if project_name:
+                conn = sqlite3.connect('projects.db')
+                c = conn.cursor()
+                c.execute("SELECT * FROM projects WHERE المشروع = ?", (project_name,))
+                project = c.fetchone()
+                conn.close()
 
-            if not project:
-                flash(f'المشروع "{project_name}" غير موجود!', 'danger')
+                if not project:
+                    flash(f'المشروع "{project_name}" غير موجود!', 'danger')
+            else:
+                flash('يرجى إدخال اسم المشروع!', 'danger')
 
         elif 'delete' in request.form:
-            conn = sqlite3.connect('projects.db')
-            c = conn.cursor()
-            c.execute("DELETE FROM projects WHERE المشروع = ?", (project_name,))
-            conn.commit()
-            conn.close()
-            flash(f'تم حذف المشروع "{project_name}" بنجاح!', 'success')
-            return redirect(url_for('delete_project'))
+            if project_name:
+                conn = sqlite3.connect('projects.db')
+                c = conn.cursor()
+                c.execute("DELETE FROM projects WHERE المشروع = ?", (project_name,))
+                conn.commit()
+                conn.close()
+                flash(f'تم حذف المشروع "{project_name}" بنجاح!', 'success')
+                return redirect(url_for('delete_project'))
+            else:
+                flash('يرجى إدخال اسم المشروع!', 'danger')
 
     return render_template('delete_project.html', project=project)
-@app.route('/edit_project', methods=['GET'])
-def edit_project():
-    if 'username' not in session:
-        flash('يجب تسجيل الدخول أولاً!', 'warning')
-        return redirect(url_for('login'))
-
-    conn = sqlite3.connect('projects.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM projects')
-    projects = c.fetchall()
-    conn.close()
-
-    return render_template('edit_project.html', projects=projects)
-@app.route('/update_project/<project_name>', methods=['GET', 'POST'])
-def update_project(project_name):
-    if 'username' not in session:
-        flash('يجب تسجيل الدخول أولاً!', 'warning')
-        return redirect(url_for('login'))
-
-    conn = sqlite3.connect('projects.db')
-    c = conn.cursor()
-
-    if request.method == 'POST':
-        التسلسل = request.form.get('التسلسل', '')
-        المحافظة = request.form.get('المحافظة', '')
-        المشروع = request.form.get('المشروع', '')
-        الكلفة_الكلية = request.form.get('الكلفة_الكلية', '')
-
-        c.execute('''UPDATE projects SET التسلسل=?, المحافظة=?, المشروع=?, الكلفة_الكلية=? WHERE المشروع=?''',
-                  (التسلسل, المحافظة, المشروع, الكلفة_الكلية, project_name))
-        conn.commit()
-        conn.close()
-
-        flash('تم تعديل بيانات المشروع بنجاح!', 'success')
-        return redirect(url_for('edit_project'))
-
-    c.execute("SELECT * FROM projects WHERE المشروع = ?", (project_name,))
-    project = c.fetchone()
-    conn.close()
-
-    if not project:
-        flash('المشروع غير موجود!', 'danger')
-        return redirect(url_for('edit_project'))
-
-    return render_template('update_project.html', project=project)
-@app.route('/reports', methods=['GET'])
-def reports():
-    if 'username' not in session:
-        flash('يجب تسجيل الدخول أولاً!', 'warning')
-        return redirect(url_for('login'))
-
-    conn = sqlite3.connect('projects.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM projects")
-    reports = c.fetchall()
-    conn.close()
-
-    return render_template('reports.html', reports=reports)
-
 # تشغيل التطبيق
 if __name__ == '__main__':
     init_db()
