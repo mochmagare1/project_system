@@ -3,7 +3,7 @@
 {% block content %}
 <h2 class="text-center my-4 text-primary">إضافة مشروع جديد</h2>
 
-<div class="container">
+<div class="container" dir="rtl">  <!-- إضافة dir="rtl" هنا -->
     <form action="{{ url_for('add_project') }}" method="POST" class="row g-3 p-4 bg-light shadow rounded">
 
         {% set fields = [
@@ -99,11 +99,10 @@
             <label class="form-label fw-bold">ملاحظات:</label>
             <textarea name="ملاحظات" class="form-control border-secondary" rows="3"></textarea>
         </div>
-
         <!-- زر الإرسال -->
         <div class="col-12 text-center">
             <button type="submit" class="btn btn-primary btn-lg">إضافة المشروع</button>
-         </div>
+        </div>
     </form>
 </div>
 

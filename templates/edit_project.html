@@ -12,7 +12,7 @@
 
 <!-- نموذج تعديل المشروع -->
 <div class="container mt-4">
-    <form id="edit-form" action="/update_project" method="POST" class="row g-3 p-4 bg-light shadow rounded" style="display: none;">
+    <form id="edit-form" action="/edit_project" method="POST" class="row g-3 p-4 bg-light shadow rounded" style="display: none;">
         <input type="hidden" name="المشروع" id="edit-المشروع">
 
         {% set fields = [
@@ -81,9 +81,5 @@
 
         document.getElementById('edit-form').style.display = 'block';
     }
-
-    document.getElementById('edit-form').addEventListener('submit', function(event) {
-        // لا توجد تحذيرات هنا، سيتم حفظ جميع التعديلات مباشرة
-    });
 </script>
 {% endblock %}

@@ -4,22 +4,53 @@
 <h2 class="text-center my-4 text-primary">الصفحة الرئيسية</h2>
 
 <div class="container">
-    <form action="{{ url_for('home') }}" method="POST" class="row g-3 p-4 bg-light shadow rounded">
-        <div class="col-md-6">
-            <a href="{{ url_for('add_project') }}" class="btn btn-primary w-100">إضافة مشروع</a>
+    <div class="row g-3">
+        <div class="col-md-6 mb-3">
+            <a href="{{ url_for('add_project') }}" class="btn btn-primary w-100 shadow">
+                <i class="fas fa-plus-circle"></i> إضافة مشروع
+            </a>
         </div>
-         <div class="col-md-6">
-            <a href="{{ url_for('edit_project') }}" class="btn btn-secondary w-100">تعديل بيانات المشروع</a>
+        <div class="col-md-6 mb-3">
+            <a href="{{ url_for('delete_project') }}" class="btn btn-danger w-100 shadow">
+                <i class="fas fa-trash-alt"></i> حذف مشروع
+            </a>
         </div>
-        <div class="col-md-6">
-    <a href="{{ url_for('delete_project') }}" class="btn btn-danger w-100">حذف مشروع</a>
-</div>
-
-    </form>
-
-    <!-- زر التقارير يعمل الآن كرابط مباشر -->
-    <div class="col-md-6 mt-3">
-        <a href="{{ url_for('reports') }}" class="btn btn-info w-100">التقارير</a>
+        <div class="col-md-6 mb-3">
+            <a href="{{ url_for('edit_project') }}" class="btn btn-warning w-100 shadow">
+                <i class="fas fa-edit"></i> تعديل أو حذف البيانات
+            </a>
+        </div>
+        <div class="col-md-6 mb-3">
+            <a href="{{ url_for('reports') }}" class="btn btn-info w-100 shadow">
+                <i class="fas fa-file-alt"></i> تقرير حسب المشروع
+            </a>
+        </div>
+        <div class="col-md-6 mb-3">
+            <a href="{{ url_for('reports1') }}" class="btn btn-info w-100 shadow">
+                <i class="fas fa-map-marker-alt"></i> تقرير حسب المحافظة
+            </a>
+        </div>
     </div>
 </div>
+
+<!-- إضافة بعض التنسيقات لتحسين الصفحة -->
+<style>
+    body {
+        background-color: #f8f9fa; /* خلفية خفيفة */
+    }
+    .btn {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 0.5rem; /* زوايا دائرية */
+    }
+    .btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* ظل عند التحويم */
+    }
+    h2 {
+        font-family: 'Arial', sans-serif; /* خط جذاب */
+    }
+</style>
+
+<!-- تضمين أيقونات Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 {% endblock %}

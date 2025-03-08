@@ -1,124 +1,138 @@
-{% extends "layout.html" %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>التقارير</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        .table {
-            width: 100%;
-            border-collapse: collapse;
+        body {
+            background-color: #ADD8E6; /* لون أزرق فاتح */
         }
-
-        .table th, .table td {
-            padding: 10px;
-            text-align: center;
-        }
-
-        .table-dark {
-            background-color: #343a40;
-            color: white;
-        }
-
-        .error {
-            border: 2px solid red; /* لون الحدود باللون الأحمر للحقول الفارغة */
+        .container {
+            margin-top: 50px;
+            background-color: white; /* خلفية بيضاء للنموذج */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
     </style>
-</head>
-
-<h2 class="text-center my-4 text-primary">التقارير</h2>
-
-<!-- نموذج البحث بالصوت والكتابة -->
-<div class="search-container text-center">
-    <h3>ابحث عن المشروع</h3>
-    <input type="text" id="text-search" class="form-control w-50 d-inline" placeholder="ادخل اسم المشروع">
-    <button class="btn btn-primary" onclick="searchByText()">بحث</button>
-    <button class="btn btn-secondary" onclick="startVoiceRecognition()">🔊 بحث بالصوت</button>
-</div>
-
-<!-- جدول عرض التقارير -->
-<div class="table-responsive mt-4">
-    <table class="table table-bordered text-center">
-        <thead class="table-dark">
-            <tr>
-                {% if reports %}
-                    {% for key in reports[0].keys() %}
-                        <th>{{ key.replace('_', ' ') }}</th>
-                    {% endfor %}
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody id="report-table-body">
-            {% for report in reports %}
-            <tr id="row-{{ report['المشروع']|replace(' ', '_') }}">
-                {% for key, value in report.items() %}
-                <td>{{ value if value is not none else '-' }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<script>
-    function searchByText() {
-        let projectName = document.getElementById('text-search').value.trim().replace(/\s+/g, '_');
-        fetch('/search_reports', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_name: projectName })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            updateReportTable(data, projectName);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى.");
-        });
-    }
-
-    function startVoiceRecognition() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'ar-SA'; // تعيين اللغة للعربية
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        recognition.start();
-
-        recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('text-search').value = transcript; // إدخال النص في حقل البحث
-            searchByText(); // بدء البحث
-        };
-
-        recognition.onerror = function(event) {
-            console.error('Error occurred in recognition: ' + event.error);
-            alert("حدث خطأ أثناء التعرف على الصوت. يرجى المحاولة مرة أخرى.");
-        };
-    }
-
-    function updateReportTable(data, projectName) {
-        let tableBody = document.getElementById('report-table-body');
-        tableBody.innerHTML = '';
-
-        if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="15" class="text-center text-danger">لا توجد نتائج.</td></tr>';
-        } else {
-            data.forEach(report => {
-                let row = `<tr id="row-${report['المشروع'].replace(/\s+/g, '_')}">`;
-                Object.values(report).forEach(value => {
-                    row += `<td>${value !== null ? value : '-'}</td>`;
-                });
-                row += `</tr>`;
-                tableBody.innerHTML += row;
+    <script>
+        function searchByText() {
+            let projectName = document.getElementById('text-search').value.trim().replace(/\s+/g, '_');
+            fetch('/search_reports', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project_name: projectName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateReportTable(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى.");
             });
         }
-    }
-</script>
-{% endblock %}
+
+        function startVoiceSearch() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'ar-SA'; // تعيين اللغة إلى العربية
+            recognition.interimResults = false;
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const projectName = event.results[0][0].transcript;
+                document.getElementById('text-search').value = projectName;
+                searchByText(); // إجراء البحث بعد التعرف على الصوت
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Error occurred in recognition:', event.error);
+            };
+        }
+
+        function updateReportTable(data) {
+            let tableBody = document.getElementById('report-table-body');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="20" class="text-center text-danger">لا توجد نتائج.</td></tr>';
+            } else {
+                data.forEach(report => {
+                    let row = '<tr>';
+                    row += `<td>${report['التسلسل']}</td>`;
+                    row += `<td>${report['المحافظة']}</td>`;
+                    row += `<td>${report['المشروع']}</td>`;
+                    row += `<td>${report['مدرج_في_وزارة_التخطيط']}</td>`;
+                    row += `<td>${report['مؤشر_لدى_وزارة_المالية']}</td>`;
+                    row += `<td>${report['الكلفة_الكلية']}</td>`;
+                    row += `<td>${report['الاستثناء_من_أساليب_التعاقد']}</td>`;
+                    row += `<td>${report['استثناء']}</td>`;
+                    row += `<td>${report['الإعلان']}</td>`;
+                    row += `<td>${report['تاريخ_غلق_الدعوات']}</td>`;
+                    row += `<td>${report['لجنة_تحليل']}</td>`;
+                    row += `<td>${report['قرار_لجنة_التحليل_الى_دائرة_العقود']}</td>`;
+                    row += `<td>${report['لجنة_المراجعة_والمصادقة']}</td>`;
+                    row += `<td>${report['الإحالة']}</td>`;
+                    row += `<td>${report['مسودة_العقد']}</td>`;
+                    row += `<td>${report['توقيع_العقد']}</td>`;
+                    row += `<td>${report['ملاحظات']}</td>`;
+                    row += `<td>${report['دراسة_سيرة ذاتية']}</td>`;
+                    row += `<td>${report['الدعوات']}</td>`;
+                    row += `<td>${report['الوثيقة القياسية']}</td>`;
+                    row += `<td>${report['التخويل']}</td>`;
+                    row += `<td>${report['لجان_الفتح']}</td>`;
+                    row += '</tr>';
+                    tableBody.innerHTML += row;
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>البحث عن مشروع</h2>
+        <form onsubmit="searchByText(); return false;">
+            <input type="text" id="text-search" placeholder="أدخل اسم المشروع" class="form-control mb-3">
+            <button type="button" class="btn btn-secondary" onclick="startVoiceSearch()">بحث بالصوت</button>
+            <button type="submit" class="btn btn-primary">بحث</button>
+        </form>
+
+        <div class="table-responsive mt-4">
+            <table class="table table-bordered text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>التسلسل</th>
+                        <th>المحافظة</th>
+                        <th>اسم المشروع</th>
+                        <th>مدرج في وزارة التخطيط</th>
+                        <th>مؤشر لدى وزارة المالية</th>
+                        <th>الكلفة الكلية</th>
+                        <th>الاستثناء من أساليب التعاقد</th>
+                        <th>استثناء</th>
+                        <th>الإعلان</th>
+                        <th>تاريخ غلق الدعوات</th>
+                        <th>لجنة تحليل</th>
+                        <th>قرار لجنة التحليل إلى دائرة العقود</th>
+                        <th>لجنة المراجعة والمصادقة</th>
+                        <th>الإحالة</th>
+                        <th>مسودة العقد</th>
+                        <th>توقيع العقد</th>
+                        <th>ملاحظات</th>
+                        <th>دراسة سيرة ذاتية</th>
+                        <th>الدعوات</th>
+                        <th>الوثيقة القياسية</th>
+                        <th>التخويل</th>
+                        <th>لجان الفتح</th>
+                    </tr>
+                </thead>
+                <tbody id="report-table-body">
+                    <!-- النتائج ستظهر هنا -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
