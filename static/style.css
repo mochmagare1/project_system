@@ -1,206 +1,81 @@
-/* تخصيص الاتجاه من اليمين إلى اليسار */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
-    direction: rtl; /* تغيير الاتجاه إلى اليمين */
-}
+{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <style>
+        /* تخصيص اتجاه النص من اليمين إلى اليسار */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa; /* خلفية فاتحة */
+            color: #333; /* لون النص */
+            direction: rtl; /* تغيير الاتجاه إلى اليمين */
+        }
 
-h2 {
-    color: #4CAF50;
-    text-align: center;
-    margin-bottom: 30px;
-}
+        /* تخصيص العناوين بلون غامق */
+        h2 {
+            color: #4CAF50; /* لون العنوان */
+            font-weight: bold; /* جعل النص غامق */
+            text-align: center; /* محاذاة العنوان في المنتصف */
+            margin-bottom: 20px; /* إضافة مساحة أسفل العنوان */
+            font-size: 2.5rem; /* زيادة حجم العنوان */
+            text-transform: uppercase; /* تحويل النص إلى أحرف كبيرة */
+        }
 
-/* تخصيص الأزرار */
-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, transform 0.2s ease-in-out;
-}
+        h4, h6 {
+            color: #666666; /* اللون الغامق */
+            font-weight: bold; /* جعل النص غامق */
+            text-align: center; /* محاذاة العنوان في المنتصف */
+            margin-bottom: 15px; /* إضافة مساحة أسفل العنوان */
+            font-size: 1.5rem; /* زيادة حجم العناوين الفرعية */
+        }
 
-button:hover {
-    background-color: #45a049;
-    transform: scale(1.05);
-}
+        /* تخصيص الأزرار */
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+        }
 
-/* تخصيص الحقول في النماذج */
-input, select, textarea {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
-    width: 100%;
-    margin-bottom: 15px;
-    font-size: 16px;
-    text-align: right; /* تحديد محاذاة النص إلى اليمين */
-}
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
 
-input:focus, select:focus, textarea:focus {
-    border-color: #4CAF50;
-    outline: none;
-    box-shadow: 0px 0px 5px rgba(76, 175, 80, 0.5);
-}
+        /* تخصيص الحقول في النماذج */
+        input, select, textarea {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-align: right;
+        }
 
-/* تخصيص الجداول */
-table {
-    width: 100%;
-    margin-top: 30px;
-    border-collapse: collapse;
-}
+        input:focus, select:focus, textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0px 0px 5px rgba(76, 175, 80, 0.5);
+        }
 
-table th, table td {
-    padding: 12px;
-    text-align: right; /* محاذاة النص في الجدول إلى اليمين */
-    border: 1px solid #ddd;
-}
-
-table th {
-    background-color: #4CAF50;
-    color: white;
-}
-
-table tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-table tr:hover {
-    background-color: #ddd;
-}
-
-/* تحسين البحث */
-.search-container {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.search-container input {
-    border: 2px solid #007bff;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 5px;
-    transition: all 0.3s ease-in-out;
-}
-
-.search-container input:focus {
-    border-color: #4CAF50;
-    box-shadow: 0px 0px 5px rgba(76, 175, 80, 0.5);
-}
-
-.search-container button {
-    margin-left: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-}
-
-/* تحسين مظهر الأزرار */
-button, a.btn {
-    transition: all 0.3s ease-in-out;
-}
-
-button:hover, a.btn:hover {
-    transform: scale(1.05);
-}
-
-/* تخصيص البحث الصوتي */
-.voice-search {
-    background-color: #007bff;
-    border: none;
-    color: white;
-    padding: 10px 15px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-}
-
-.voice-search:hover {
-    background-color: #0056b3;
-    transform: scale(1.05);
-}
-
-/* تحسين التجاوب مع الهواتف */
-@media (max-width: 768px) {
-    .search-container input {
-        width: 80%;
-    }
-
-    .table th, .table td {
-        font-size: 14px;
-        padding: 5px;
-    }
-}
-
-/* تمييز الصف المحدد عند البحث باللون الأحمر بدون وميض */
-.highlight {
-    background-color: red !important;
-    font-weight: bold;
-    transition: background-color 0.3s ease-in-out;
-    border: 3px solid black; /* تكبير التحديد */
-}
-/* تمييز الصف المحدد عند البحث */
-.highlight {
-    background-color: red !important;
-    font-weight: bold;
-    transition: background-color 0.3s ease-in-out;
-    border: 3px solid black;
-}
-
-/* تحسين التجاوب مع الهواتف */
-@media (max-width: 768px) {
-    .search-container input {
-        width: 80%;
-    }
-
-    .table th, .table td {
-        font-size: 14px;
-        padding: 5px;
-    }
-}
-/* تمييز الصف المحدد عند البحث */
-.highlight {
-    background-color: red !important;
-    font-weight: bold;
-    transition: background-color 0.5s ease-in-out, transform 0.3s ease-in-out;
-    border: 3px solid black !important;
-}
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f8f9fa;
-}
-
-h2, h4, h6 {
-    margin: 0;
-}
-
-.container {
-    max-width: 800px;
-    margin: auto;
-    padding: 20px;
-}
-
-.text-right {
-    text-align: right; /* محاذاة النص إلى اليمين */
-}
-
-.btn {
-    font-size: 18px;
-    padding: 10px;
-    border-radius: 10px;
-}
-
-.bg-light {
-    background-color: #f8f9fa !important; /* خلفية فاتحة */
-}
-
-.shadow {
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.rounded {
-    border-radius: 10px; /* زوايا مستديرة */
-}
+        /* تحسين التجاوب مع الهواتف */
+        @media (max-width: 768px) {
+            table th, table td {
+                font-size: 14px;
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>عنوان الصفحة</h2>
+    <h4>عنوان فرعي</h4>
+    <h6>عنوان ثانوي</h6>
+    <!-- باقي المحتوى هنا -->
+</body>
+</html>
