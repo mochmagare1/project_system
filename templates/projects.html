@@ -1,36 +1,25 @@
-{% extends "layout.html" %}
-
-{% block content %}
-<h2 class="text-center my-4">إدارة المشاريع</h2>
-
-<div class="container">
-    <a href="{{ url_for('add_project') }}" class="btn btn-primary mb-3">إضافة مشروع جديد</a>
-
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>التسلسل</th>
-                <th>المحافظة</th>
-                <th>المشروع</th>
-                <th>الكلفة الكلية</th>
-                <th>الإعلان</th>
-                <th>الإجراءات</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for project in projects %}
-            <tr>
-                <td>{{ project[1] }}</td>
-                <td>{{ project[2] }}</td>
-                <td>{{ project[3] }}</td>
-                <td>{{ project[6] }}</td>
-                <td>{{ project[9] }}</td>
-                <td>
-                    <a href="{{ url_for('add_project') }}" class="btn btn-sm btn-success">إضافة جديد</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endblock %}
+CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    التسلسل INTEGER,
+    المحافظة TEXT,
+    المشروع TEXT UNIQUE,
+    مدرج_في_وزارة_التخطيط TEXT,
+    مؤشر_لدى_وزارة_المالية TEXT,
+    الكلفة_الكلية REAL,
+    الاستثناء_من_أساليب_التعاقد TEXT,
+    استثناء TEXT,
+    الإعلان DATE,
+    دراسة_سيرة_ذاتية BOOLEAN,
+    الدعوات BOOLEAN,
+    الوثيقة_القياسية BOOLEAN,
+    التخويل BOOLEAN,
+    تاريخ_غلق_الدعوات DATE,
+    لجان_الفتح BOOLEAN,
+    لجنة_تحليل BOOLEAN,
+    قرار_لجنة_التحليل_الى_دائرة_العقودBOOLEAN,
+    لجنة_المراجعة_والمصادقة BOOLEAN,
+    الإحالة BOOLEAN,
+    مسودة_العقد BOOLEAN,
+    توقيع_العقدBOOLEAN,
+    ملاحظات TEXT
+);
