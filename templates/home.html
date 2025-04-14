@@ -39,16 +39,7 @@
             <button type="submit" class="btn btn-secondary w-100 shadow hover-effect">
                 <i class="fas fa-archive"></i> إنشاء نسخة احتياطية
             </button>
-        </form>
-        <form method="POST" action="{{ url_for('restore_backup') }}" enctype="multipart/form-data">
-    <div class="input-group">
-        <input type="file" name="backup_file" class="form-control" required>
-        <button type="submit" class="btn btn-outline-secondary shadow hover-effect">
-            <i class="fas fa-upload"></i> استرجاع نسخة احتياطية
-        </button>
-    </div>
-</form>
-        <a href="{{ url_for('export_excel') }}" class="btn btn-outline-success btn-lg my-3">
+          <a href="{{ url_for('export_excel') }}" class="btn btn-outline-success btn-lg my-3">
             📥 تصدير إلى Excel
         </a>
     </div>
